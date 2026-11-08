@@ -1,0 +1,54 @@
+name: Confluence Docs
+on:
+  push:
+    branches: [main]
+    paths: ['sample/**/*.py']          # sample配下のPythonファイル変更時のみ起動
+  workflow_dispatch:                   # 手動実行も可能
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:                               # .mcp.json の ${...} から参照される
+      CONFLUENCE_URL: ${{ secrets.CONFLUENCE_URL }}             # 例: https://xxx.atlassian.net/wiki
+      CONFLUENCE_USERNAME: ${{ secrets.CONFLUENCE_USERNAME }}   # Atlassianアカウントのメール
+      CONFLUENCE_API_TOKEN: ${{ secrets.CONFLUENCE_API_TOKEN }}
+      CONFLUENCE_SPACE_KEY: ${{ vars.CONFLUENCE_SPACE_KEY }}    # 例: DEV
+    steps:
+      - uses: actions/checkout@v4      # ステップ1: チェックアウト（差分取得のため2コミット分）
+        with:
+          fetch-depth: 2
+      - uses: actions/setup-python@v5  # ステップ2: テスト実行（失敗したらドキュメント生成しない）
+        with:
+          python-version: '3.12'
+      - run: python -m unittest discover -s sample -v
+      - uses: astral-sh/setup-uv@v6    # ステップ3: MCPサーバ(mcp-atlassian)起動用の uvx を用意
+      - uses: anthropics/claude-code-action@v1  # ステップ4: Claude + Confluence MCP でページ生成
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          claude_args: >-
+            --mcp-config .mcp.json
+            --allowedTools "Read,Glob,Grep,Bash(git diff:*),Bash(git log:*),mcp__confluence__confluence_search,mcp__confluence__confluence_get_page,mcp__confluence__confluence_create_page,mcp__confluence__confluence_update_page"
+          prompt: |
+            あなたはこのリポジトリのドキュメント担当です。Confluence MCP サーバ（confluence）を使って、
+            sample/ 配下の Python コードのドキュメントを Confluence に自動生成・更新してください。
+
+            対象コミット: ${{ github.sha }}（リポジトリ: ${{ github.repository }}）
+            Confluence スペースキー: ${{ vars.CONFLUENCE_SPACE_KEY }}
+
+            手順:
+            1. sample/ 配下の *.py ファイル（test_*.py は除く）をすべて読む。
+               `git diff HEAD~1 --stat -- sample/` で今回変更されたファイルも確認する。
+            2. ファイルごとに 1 ページ、タイトル「[Learn_CICD] sample/<ファイル名>」で作成する。
+               まず confluence_search でスペース内に同じタイトルのページがあるか確認し、
+               あれば confluence_update_page で更新、なければ confluence_create_page で作成する。
+            3. ページ本文（Markdown）は日本語で、次の構成にする:
+               - 概要（モジュールの目的）
+               - クラス・関数一覧（引数・戻り値・例外を表形式で）
+               - 使い方の例
+               - 対応するテスト（test_<名前>.py があればテストケースの一覧）
+               - ソースコード全文（コードブロック）
+               - 最終更新コミット（SHA と GitHub へのリンク:
+                 ${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}）
+            4. 最後に、作成/更新したページのタイトルと URL を一覧で出力する。

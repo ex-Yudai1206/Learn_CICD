@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "confluence": {
+      "command": "uvx",
+      "args": ["mcp-atlassian"],
+      "env": {
+        "CONFLUENCE_URL": "${CONFLUENCE_URL}",
+        "CONFLUENCE_USERNAME": "${CONFLUENCE_USERNAME}",
+        "CONFLUENCE_API_TOKEN": "${CONFLUENCE_API_TOKEN}",
+        "CONFLUENCE_SPACES_FILTER": "${CONFLUENCE_SPACE_KEY}",
+        "ENABLED_TOOLS": "confluence_search,confluence_get_page,confluence_create_page,confluence_update_page"
+      }
+    }
+  }
+}
