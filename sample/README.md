@@ -16,7 +16,7 @@ Confluence にコードのドキュメントページを自動作成・更新し
 
 | 種類 | 名前 | 値 |
 | --- | --- | --- |
-| Secret | `ANTHROPIC_API_KEY` | Anthropic の API キー |
+| Secret | `CLAUDE_CODE_OAUTH_TOKEN` | ローカルで `claude setup-token` を実行して発行（Claude Pro/Max） |
 | Secret | `CONFLUENCE_URL` | `https://<your-site>.atlassian.net/wiki` |
 | Secret | `CONFLUENCE_USERNAME` | Atlassian アカウントのメールアドレス |
 | Secret | `CONFLUENCE_API_TOKEN` | https://id.atlassian.com/manage-profile/security/api-tokens で発行 |

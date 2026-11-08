@@ -25,7 +25,7 @@ jobs:
       - uses: astral-sh/setup-uv@v6    # ステップ3: MCPサーバ(mcp-atlassian)起動用の uvx を用意
       - uses: anthropics/claude-code-action@v1  # ステップ4: Claude + Confluence MCP でページ生成
         with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}  # claude setup-token で発行
           github_token: ${{ secrets.GITHUB_TOKEN }}
           claude_args: >-
             --mcp-config .mcp.json
